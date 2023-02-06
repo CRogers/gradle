@@ -105,7 +105,6 @@ public class DefaultBuildEventsListenerRegistry implements BuildEventsListenerRe
         }
 
         ForwardingBuildOperationListener subscription = new ForwardingBuildOperationListener(listenerProvider, executorFactory);
-        keepAliveIfBuildService(listenerProvider);
         subscriptions.put(listenerProvider, subscription);
         buildOperationListenerManager.addListener(subscription);
         listeners.add(subscription);
@@ -118,7 +117,9 @@ public class DefaultBuildEventsListenerRegistry implements BuildEventsListenerRe
         }
 
         ForwardingBuildEventConsumer subscription = new ForwardingBuildEventConsumer(listenerProvider, executorFactory);
-        keepAliveIfBuildService(listenerProvider);
+        if (listenerProvider instanceof RegisteredBuildServiceProvider) {
+            ((RegisteredBuildServiceProvider) listenerProvider).keepAlive();
+        }
         subscriptions.put(listenerProvider, subscription);
 
         BuildEventSubscriptions eventSubscriptions = new BuildEventSubscriptions(Collections.singleton(OperationType.TASK));
@@ -130,12 +131,6 @@ public class DefaultBuildEventsListenerRegistry implements BuildEventsListenerRe
             if (listener instanceof BuildOperationListener) {
                 buildOperationListenerManager.addListener((BuildOperationListener) listener);
             }
-        }
-    }
-
-    private void keepAliveIfBuildService(Provider<?> listenerProvider) {
-        if (listenerProvider instanceof RegisteredBuildServiceProvider) {
-            ((RegisteredBuildServiceProvider) listenerProvider).keepAlive();
         }
     }
 
