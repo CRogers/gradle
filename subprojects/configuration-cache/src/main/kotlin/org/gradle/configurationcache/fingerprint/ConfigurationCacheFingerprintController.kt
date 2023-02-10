@@ -25,6 +25,7 @@ import org.gradle.api.internal.provider.ValueSourceProviderFactory
 import org.gradle.configurationcache.CheckedFingerprint
 import org.gradle.configurationcache.ConfigurationCacheStateFile
 import org.gradle.configurationcache.InputTrackingState
+import org.gradle.configurationcache.ConfigurationCacheEncryptionService
 import org.gradle.configurationcache.extensions.directoryContentHash
 import org.gradle.configurationcache.extensions.uncheckedCast
 import org.gradle.configurationcache.initialization.ConfigurationCacheStartParameter
@@ -82,7 +83,8 @@ class ConfigurationCacheFingerprintController internal constructor(
     private val environmentChangeTracker: ConfigurationCacheEnvironmentChangeTracker,
     private val inputTrackingState: InputTrackingState,
     private val scriptFileResolverListeners: ScriptFileResolverListeners,
-    private val remoteScriptUpToDateChecker: RemoteScriptUpToDateChecker
+    private val remoteScriptUpToDateChecker: RemoteScriptUpToDateChecker,
+    private val encryptionService: ConfigurationCacheEncryptionService
 ) : Stoppable {
 
     interface Host {
@@ -281,6 +283,12 @@ class ConfigurationCacheFingerprintController internal constructor(
     inner class CacheFingerprintWriterHost :
         ConfigurationCacheFingerprintWriter.Host {
 
+        override val isEncrypted: Boolean
+            get() = encryptionService.isEncrypting
+
+        override val encryptionKeyHashCode: HashCode
+            get() = encryptionService.encryptionKeyHashCode
+
         override val gradleUserHomeDir: File
             get() = startParameter.gradleUserHomeDir
 
@@ -325,6 +333,12 @@ class ConfigurationCacheFingerprintController internal constructor(
 
         private
         val gradleProperties by lazy(host::gradleProperties)
+
+        override val isEncrypted: Boolean
+            get() = encryptionService.isEncrypting
+
+        override val encryptionKeyHashCode: HashCode
+            get() = encryptionService.encryptionKeyHashCode
 
         override val gradleUserHomeDir: File
             get() = startParameter.gradleUserHomeDir
