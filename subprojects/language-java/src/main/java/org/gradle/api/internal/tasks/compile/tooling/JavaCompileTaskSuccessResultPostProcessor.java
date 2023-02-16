@@ -19,6 +19,7 @@ package org.gradle.api.internal.tasks.compile.tooling;
 import org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationType;
 import org.gradle.api.internal.tasks.compile.CompileJavaBuildOperationType.Result.AnnotationProcessorDetails;
 import org.gradle.api.internal.tasks.execution.ExecuteTaskBuildOperationType;
+import org.gradle.api.logging.Logging;
 import org.gradle.internal.build.event.OperationResultPostProcessor;
 import org.gradle.internal.build.event.types.AbstractTaskResult;
 import org.gradle.internal.build.event.types.DefaultAnnotationProcessorResult;
@@ -54,11 +55,18 @@ public class JavaCompileTaskSuccessResultPostProcessor implements OperationResul
     @Override
     public void finished(BuildOperationDescriptor buildOperation, OperationFinishEvent finishEvent) {
         if (finishEvent.getResult() instanceof CompileJavaBuildOperationType.Result) {
+            Logging.getLogger(getClass()).lifecycle(
+                Thread.currentThread().getName() + " Result reporting " + buildOperation.getDisplayName()
+            );
             CompileJavaBuildOperationType.Result result = (CompileJavaBuildOperationType.Result) finishEvent.getResult();
             OperationIdentifier taskBuildOperationId = findTaskOperationId(buildOperation.getParentId());
             results.put(taskBuildOperationId, result);
         }
-        parentsOfOperationsWithJavaCompileTaskAncestor.remove(buildOperation.getId());
+        if (parentsOfOperationsWithJavaCompileTaskAncestor.remove(buildOperation.getId()) != null) {
+            Logging.getLogger(getClass()).lifecycle(
+                Thread.currentThread().getName() + " Dropped parent mapping " + buildOperation.getDisplayName()
+            );
+        }
     }
 
     private OperationIdentifier findTaskOperationId(OperationIdentifier id) {
