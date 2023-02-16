@@ -58,6 +58,7 @@ class AbstractAndroidSantaTrackerSmokeTest extends AbstractSmokeTest {
         return runnerForLocation(location, agpVersion,"assembleDebug")
             .deprecations(SantaTrackerDeprecations) {
                 expectAndroidWorkerExecutionSubmitDeprecationWarning(agpVersion)
+                expectConventionDeprecationWarning(agpVersion)
             }.build()
     }
 
