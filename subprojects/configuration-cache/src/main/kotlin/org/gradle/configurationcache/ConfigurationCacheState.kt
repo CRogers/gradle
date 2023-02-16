@@ -99,6 +99,7 @@ internal
 interface ConfigurationCacheStateFile {
     val exists: Boolean
     val stateType: StateType
+    val stateFile: ConfigurationCacheStateStore.StateFile
     fun outputStream(): OutputStream
     fun inputStream(): InputStream
     fun delete()
