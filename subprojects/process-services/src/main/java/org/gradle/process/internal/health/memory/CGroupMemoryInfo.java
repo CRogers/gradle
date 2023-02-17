@@ -1,62 +1,84 @@
 /*
- * Copyright 2022 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * (c) Copyright 2023 Palantir Technologies Inc. All rights reserved.
  */
 
 package org.gradle.process.internal.health.memory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.io.Files;
+import com.google.common.base.Splitter;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
-public class CGroupMemoryInfo implements OsMemoryInfo {
-    private static final String CGROUP_MEM_USAGE_FILE = "/sys/fs/cgroup/memory/memory.usage_in_bytes";
-    private static final String CGROUP_MEM_TOTAL_FILE = "/sys/fs/cgroup/memory/memory.limit_in_bytes";
+final class CGroupMemoryInfo {
+    public static Optional<OsMemoryInfo> findCGroupMemoryInfo() {
+        return parseFromMtab().or(() -> {
+            Path defaultCGroupMountPath = Paths.get("/sys/fs/cgroup");
 
-    @Override
-    public OsMemoryStatus getOsSnapshot() {
-        String memUsageString = readStringFromFile(new File(CGROUP_MEM_USAGE_FILE));
-        String memTotalString = readStringFromFile(new File(CGROUP_MEM_TOTAL_FILE));
+            // cgroups v2 has cgroup.controllers, cgroups v1 does not
+            if (Files.exists(defaultCGroupMountPath.resolve("cgroup.controllers"))) {
+                return Optional.of(new CGroupV2MemoryInfo(defaultCGroupMountPath));
+            }
 
-        return getOsSnapshotFromCgroup(memUsageString, memTotalString);
+            Path defaultCGroupV1MemoryMountPath = defaultCGroupMountPath.resolve("memory");
+
+            if (Files.exists(defaultCGroupV1MemoryMountPath) && Files.isDirectory(defaultCGroupV1MemoryMountPath)) {
+                return Optional.of(new CGroupV1MemoryInfo(defaultCGroupV1MemoryMountPath));
+            }
+
+            return Optional.empty();
+        });
     }
 
-    private String readStringFromFile(File file) {
+    private static Optional<OsMemoryInfo> parseFromMtab() {
+        Path etcMtab = Paths.get("/etc/mtab");
+
+        if (Files.notExists(etcMtab)) {
+            return Optional.empty();
+        }
+
         try {
-            return Files.asCharSource(file, Charset.defaultCharset()).readFirstLine();
+            return findCGroupFilesystemFromMtabLines(Files.readAllLines(etcMtab));
         } catch (IOException e) {
-            throw new UnsupportedOperationException("Unable to read system memory from " + file.getAbsoluteFile(), e);
+            return Optional.empty();
         }
     }
 
-    @VisibleForTesting
-    OsMemoryStatusSnapshot getOsSnapshotFromCgroup(String memUsageString, String memTotalString) {
-        long memUsage;
-        long memTotal;
-        long memAvailable;
+    static Optional<OsMemoryInfo> findCGroupFilesystemFromMtabLines(List<String> mtabLines) {
+        for (String mtabLine : mtabLines) {
+            List<String> parts = Splitter.on(' ').splitToList(mtabLine);
 
-        try {
-            memUsage = Long.parseLong(memUsageString);
-            memTotal = Long.parseLong(memTotalString);
-            memAvailable = Math.max(0, memTotal - memUsage);
-        } catch (NumberFormatException e) {
-            throw new UnsupportedOperationException("Unable to read system memory", e);
+            if (parts.size() < 3) {
+                return Optional.empty();
+            }
+
+            Path mountPath = Paths.get(parts.get(1));
+            String filesSystemType = parts.get(2);
+            String mountOptions = parts.get(3);
+
+            if (filesSystemType.equals("cgroup")) {
+
+                boolean isMemoryCGroupMount =
+                        Splitter.on(',').splitToStream(mountOptions).anyMatch(Predicate.isEqual("memory"));
+
+                if (!isMemoryCGroupMount) {
+                    continue;
+                }
+
+                return Optional.of(new CGroupV1MemoryInfo(mountPath));
+            }
+
+            if (filesSystemType.equals("cgroup2")) {
+                return Optional.of(new CGroupV2MemoryInfo(mountPath));
+            }
         }
 
-        return new OsMemoryStatusSnapshot(memTotal, memAvailable);
+        return Optional.empty();
     }
+
+    private CGroupMemoryInfo() {}
 }
