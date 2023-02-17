@@ -79,10 +79,7 @@ class AgentApplicationTest extends AbstractIntegrationSpec {
 
         then:
         agentStatusWas(agentStatus)
-        configurationCache.assertStateStored() {
-            // TODO(https://github.com/gradle/configuration-cache/issues/585) Remove this when the issue is fixed
-            loadsOnStore = false // For now
-        }
+        configurationCache.assertStateStored()
 
         when:
         withAgentApplied(agentStatus)
@@ -107,10 +104,7 @@ class AgentApplicationTest extends AbstractIntegrationSpec {
 
         then:
         agentStatusWas(useAgentOnFirstRun)
-        configurationCache.assertStateStored() {
-            // TODO(https://github.com/gradle/configuration-cache/issues/585) Remove this when the issue is fixed
-            loadsOnStore = false // For now
-        }
+        configurationCache.assertStateStored()
 
         when:
         withAgentApplied(useAgentOnSecondRun)
@@ -118,10 +112,7 @@ class AgentApplicationTest extends AbstractIntegrationSpec {
 
         then:
         agentStatusWas(useAgentOnSecondRun)
-        configurationCache.assertStateStored() {
-            // TODO(https://github.com/gradle/configuration-cache/issues/585) Remove this when the issue is fixed
-            loadsOnStore = false // For now
-        }
+        configurationCache.assertStateStored()
 
         where:
         useAgentOnFirstRun | useAgentOnSecondRun
