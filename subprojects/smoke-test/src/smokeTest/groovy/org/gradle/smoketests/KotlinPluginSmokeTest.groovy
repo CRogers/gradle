@@ -289,7 +289,7 @@ class KotlinPluginSmokeTest extends AbstractPluginValidatingSmokeTest implements
 
         testRunner.deprecations(KotlinDeprecations) {
             expectOrgGradleUtilWrapUtilDeprecation(kotlinVersion)
-            expectConventionDeprecation(kotlinVersion)
+            2.times { expectConventionDeprecation(kotlinVersion) }
         }
 
         def result = testRunner.build()
