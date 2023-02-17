@@ -19,7 +19,6 @@ package org.gradle.integtests.resolve.verification
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.Usage
 import org.gradle.api.internal.artifacts.ivyservice.CacheLayout
-import org.gradle.integtests.fixtures.ToBeFixedForConfigurationCache
 import org.gradle.integtests.fixtures.UnsupportedWithConfigurationCache
 import org.gradle.security.fixtures.KeyServer
 import org.gradle.security.fixtures.SigningFixtures
@@ -152,7 +151,6 @@ This can indicate that a dependency has been compromised. Please carefully verif
         terse << [true, false]
     }
 
-    @ToBeFixedForConfigurationCache
     def "can verify signature for artifacts downloaded in a previous build (stop in between = #stopInBetween)"() {
         given:
         terseConsoleOutput(false)
@@ -194,7 +192,6 @@ This can indicate that a dependency has been compromised. Please carefully verif
         stopInBetween << [false, true]
     }
 
-    @ToBeFixedForConfigurationCache
     def "can verify classified artifacts downloaded in previous builds (stop in between = #stopInBetween)"() {
         def keyring = newKeyRing()
         keyServerFixture.registerPublicKey(keyring.publicKey)
@@ -844,7 +841,6 @@ This can indicate that a dependency has been compromised. Please carefully verif
 
     // This test exercises the fact that the signature cache is aware
     // of changes of the artifact
-    @ToBeFixedForConfigurationCache
     def "can detect tampered file between builds (terse output=#terse)"() {
         createMetadataFile {
             keyServer(keyServerFixture.uri)
@@ -897,7 +893,6 @@ This can indicate that a dependency has been compromised. Please carefully verif
         terse << [true, false]
     }
 
-    @ToBeFixedForConfigurationCache
     def "caching takes trusted keys into account (terse output=#terse)"() {
         createMetadataFile {
             keyServer(keyServerFixture.uri)
@@ -1563,7 +1558,6 @@ This can indicate that a dependency has been compromised. Please carefully verif
         assertConfigCacheDiscarded()
     }
 
-    @ToBeFixedForConfigurationCache
     @Issue("https://github.com/gradle/gradle/issues/19663")
     def "fails when disabling reaching out to key servers after previous successful build and no key rings file"() {
         given:
@@ -1610,7 +1604,6 @@ This can indicate that a dependency has been compromised. Please carefully verif
 This can indicate that a dependency has been compromised. Please carefully verify the signatures and checksums. Key servers are disabled, this can indicate that you need to update the local keyring with the missing keys."""
     }
 
-    @ToBeFixedForConfigurationCache
     @Issue("https://github.com/gradle/gradle/issues/18440")
     def "fails on a bad verification file change after previous successful build when key servers are disabled"() {
         def keyring = newKeyRing()
