@@ -82,7 +82,6 @@ class TapiAgentInstrumentationCrossVersionSpec extends ToolingApiSpecification {
         assert buildOutput.contains("agent applied = $applied")
     }
 
-
     private void withAgentEnabledInProperties() {
         withAgentStatusInProperties(true)
     }
