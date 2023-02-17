@@ -21,18 +21,16 @@ plugins {
 }
 
 val manifestClasspath by configurations.creating {
-    isCanBeResolved = true
-    isCanBeConsumed = false
     isTransitive = false
 
-    attributes {
-        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
-        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
-        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
-    }
+    configureAsJarClasspath()
 }
 
 val agentsClasspath by configurations.creating {
+    configureAsJarClasspath()
+}
+
+fun Configuration.configureAsJarClasspath() {
     isCanBeResolved = true
     isCanBeConsumed = false
 
