@@ -443,10 +443,23 @@ class KotlinPluginSmokeTest extends AbstractPluginValidatingSmokeTest implements
             )
         }
 
-        void expectConventionDeprecation(String version) {
-            VersionNumber versionNumber = VersionNumber.parse(version)
+        void expectConventionDeprecation(String kotlinVersion) {
+            VersionNumber kotlinVersionNumber = VersionNumber.parse(kotlinVersion)
             runner.expectDeprecationWarningIf(
-                versionNumber < VersionNumber.parse("1.7.22"),
+                kotlinVersionNumber < VersionNumber.parse("1.7.22"),
+                "The Project.getConvention method has been deprecated. " +
+                    "This is scheduled to be removed in Gradle 9.0. " +
+                    "Consult the upgrading guide for further information: " +
+                    "https://docs.gradle.org/${GradleVersion.current().version}/userguide/upgrading_version_7.html#all_convention_deprecation" ,
+                ""
+            )
+        }
+
+        void expectConventionDeprecation(String kotlinVersion, String agpVersion) {
+            VersionNumber kotlinVersionNumber = VersionNumber.parse(kotlinVersion)
+            VersionNumber agpVersionNumber = VersionNumber.parse(agpVersion)
+            runner.expectDeprecationWarningIf(
+                agpVersionNumber < VersionNumber.parse("7.4.0") || (agpVersionNumber >= VersionNumber.parse("7.4.0") && kotlinVersionNumber < VersionNumber.parse("1.7.0")),
                 "The Project.getConvention method has been deprecated. " +
                     "This is scheduled to be removed in Gradle 9.0. " +
                     "Consult the upgrading guide for further information: " +
