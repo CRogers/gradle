@@ -229,6 +229,10 @@ if "\$cygwin" || "\$msys" ; then
     done
 fi
 
+<% /*
+# The DEFAULT_JVM_OPTS variable is intentionally defined here to allow using cygwin-processed APP_HOME.
+# So far the only way to inject APP_HOME reference into DEFAULT_JVM_OPTS is to post-process the start script; the declaration is a good anchor to do that.
+*/ %>
 # Add default JVM options here. You can also use JAVA_OPTS and ${optsEnvironmentVar} to pass JVM options to this script.
 DEFAULT_JVM_OPTS=${defaultJvmOpts}
 
